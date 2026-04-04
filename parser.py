@@ -24,7 +24,7 @@ def parse_step(step):
     elif "click" in step and "login" in step:
         return {
             "action": "click",
-            "locator": "xpath=//div[@aria-label='Log in']"
+            "locator": "xpath=//div[@role='button' and @aria-label='Log in']"
         }
 
     return {"action": "unknown"}

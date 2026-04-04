@@ -16,12 +16,12 @@ def wait_and_retry(driver,locators,condition="presence",timeout=10,retries=3,del
                 wait = WebDriverWait(driver, timeout)
 
                 # 🔹 condition handling
-                if condition == "presence":
+                if condition == "visible":
                     element = wait.until(
                         EC.presence_of_element_located((by, value))
                     )
 
-                elif condition == "visible":
+                elif condition == "presence":
                     element = wait.until(
                         EC.visibility_of_element_located((by, value))
                     )

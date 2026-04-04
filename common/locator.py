@@ -8,6 +8,9 @@ def get_element(driver, locator):
     if locator.startswith("//"):
         locators.append((By.XPATH, locator))
 
+    elif locator.startswith("xpath"):
+        locators.append((By.XPATH, locator.split("=",1)[1]))
+
     elif locator.startswith("name="):
         locators.append((By.NAME, locator.split("=")[1]))
 

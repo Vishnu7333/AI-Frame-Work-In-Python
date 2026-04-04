@@ -2,16 +2,29 @@ import requests
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
+# Calling API(Pro Level initialization)
 def call_llm(prompt):
-    response = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-    return response.json().get("response", "")
+    for model in ["llama3", "phi", "mistral"]:
+        try:
+            response = requests.post(
+                OLLAMA_URL,
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+
+            data = response.json()
+
+            if "response" in data and data["response"].strip():
+                print(f"✅ Using model: {model}")
+                return data["response"]
+
+        except Exception as e:
+            print(f"❌ {model} failed:", e)
+
+    return ""
 
 
 def generate_steps_from_goal(goal):
