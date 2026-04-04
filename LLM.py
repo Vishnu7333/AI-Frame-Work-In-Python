@@ -1,111 +1,59 @@
 import requests
-import json
-import re
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+
+def call_llm(prompt):
+    response = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": "llama3",
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+    return response.json().get("response", "")
 
 
-def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if match:
-        return match.group()
-    return "{}"
-
-
-def parse_step(step):
-    step_lower = step.lower()
-
-    # ✅ RULE-BASED FIX
-    if "open" in step_lower:
-        url = re.findall(r"https?://\S+", step)
-        if url:
-            return {"action": "open", "value": url[0]}
-
-    if "validate" in step_lower and "title" in step_lower:
-        if "facebook" in step_lower:
-            return {"action": "validate", "type": "title", "value": "Facebook"}
-        
-    if "email" in step_lower:
-            value=step.split()[-1]
-            return {
-        "action": "send_keys",
-        "locator": "//label[contains(text(),'Email')]/../input",
-        "value": value
-    }    
-
-    if "password" in step_lower:
-            value=step.split()[-1]
-            return {
-        "action": "send_keys",
-        "locator": "//label[contains(text(),'Password')]/../input",
-        "value": value
-    }   
-
-    if "log in" in step_lower or "login" in step_lower:
-       return {
-        "action": "click",
-        "locator": "//button[@name='login']"
-    }
-
-    if "click" in step_lower and "login" in step_lower:
-       return {
-        "action": "click",
-        "locator": "//button[@name='login']"
-    }
-
-    
-
-    # ✅ PROMPT (keep your updated one)
+def generate_steps_from_goal(goal):
     prompt = f"""
-You are a machine that ONLY outputs JSON.
+You are a test automation step generator.
 
 STRICT RULES:
-- Output ONLY JSON
-- NO explanation
-- NO text
-- NO sentences
-- NO examples
-- NO markdown
-- NO extra characters
+- DO NOT write code
+- DO NOT write python
+- DO NOT write explanations
+- ONLY write simple test steps
+- ONE step per line
 
-If you fail, return:
-{{"action":"unknown"}}
+ALLOWED FORMAT:
+open https://www.facebook.com
+enter email test@gmail.com
+enter password 123456
+click login
 
-Valid format:
-{{
-  "action": "...",
-  "locator": "...",
-  "value": "..."
-}}
+FORBIDDEN:
+- import
+- driver
+- selenium
+- code
+- comments
 
-Step: {step}
+Goal:
+{goal}
+
+Output:
 """
 
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-        
-        "model": "phi",
-        "prompt": prompt,
-        "stream": False,
-        "temperature": 0   # 🔥 important
-}
-    )
+    output = call_llm(prompt)
+# Filtering step
+    steps = []
 
-    res_json = response.json()
-    print("FULL API RESPONSE:", res_json)
+    print("RAW LLM OUTPUT:\n", output)
 
-    if "response" in res_json:
-        raw_output = res_json["response"]
-    else:
-        print("⚠️ Invalid API response:", res_json)
-        return {"action": "unknown"}   # ✅ fixed indentation
+    for line in output.split("\n"):
+        line = line.strip().lower()
 
-    print("LLM RAW:", raw_output)
+        if any(line.startswith(x) for x in ["open", "enter", "click"]):
+           steps.append(line)
 
-    # ✅ extract JSON
-    cleaned = extract_json(raw_output)
-    print("CLEANED:", cleaned)
-
-    try:
-        return json.loads(cleaned)   # ✅ properly indented
-    except:
-        return {"action": "unknown", "raw": raw_output}
+    return steps

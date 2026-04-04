@@ -1,15 +1,22 @@
 from common.driver import get_driver
 from executor import execute_step
-from LLM import parse_step
 from common.report import log_result, save_report
+from LLM import generate_steps_from_goal
+from parser import parse_step
 
+# Input
 driver = get_driver()
 
-with open("steps.txt") as f:
-    steps = f.readlines()
+goal = "login to facebook"
 
-for step in steps:
-    step = step.strip()
+steps = generate_steps_from_goal(goal)
+
+print("Generated Steps:")
+for s in steps:
+    print(s)
+#######################
+# Execution Loop
+for step_no, step in enumerate(steps, start=1):
     step_json = parse_step(step)
 
     print("Parsed:", step_json)
