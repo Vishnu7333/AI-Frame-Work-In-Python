@@ -1,5 +1,5 @@
 Open https://www.facebook.com/
 Validate the Page title is Facebook
-Enter Email address or mobile number 9495419580
-Enter password vniesehtnhuuv
+Enter Email address or mobile number 345241
+Enter password qwertyui
 click Log in button
